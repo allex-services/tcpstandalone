@@ -1,0 +1,21 @@
+{
+  "name": "allex_tcpstandaloneservice",
+  "version": "0.1.0",
+  "description": "TcpStandaloneService",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.hers.rs:allex_services/tcpstandalone.git"
+  },
+  "keywords": [
+    "ecosystem:allex",
+    "Service",
+    "TcpStandalone"
+  ],
+  "author": "HERS Belgrade",
+  "license": "ISC"
+}
+
