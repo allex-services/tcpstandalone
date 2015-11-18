@@ -1,6 +1,8 @@
 function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
   'use strict';
-  var ParentService = ParentServicePack.Service;
+  var execSuite = execlib.execSuite,
+    taskRegistry = execSuite.taskRegistry,
+    ParentService = ParentServicePack.Service;
 
   function factoryCreator(parentFactory) {
     return {
@@ -11,8 +13,11 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
 
   function TcpStandaloneService(prophash) {
     ParentService.call(this, prophash);
+    this.resolvername = prophash.resolver;
+    this.resolver = null;
     this.port = prophash.port;
     this.server = null;
+    this.findResolver();
   }
   
   ParentService.inherit(TcpStandaloneService, factoryCreator);
@@ -23,8 +28,40 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
     }
     this.server = null;
     this.port = null;
+    if (this.resolver) {
+      this.resolver.destroy();
+    }
+    this.resolver = null;
+    this.resolvername = null;
     ParentService.prototype.__cleanUp.call(this);
   };
+
+  TcpStandaloneService.prototype.findResolver = function () {
+    var rtaskobj = {task: null};
+    rtaskobj.task = taskRegistry.run('findSink', {
+      sinkname: this.resolvername,
+      identity: {name: 'user', role: 'user'},
+      onSink: this.onResolver.bind(this, rtaskobj)
+    });
+  };
+
+  TcpStandaloneService.prototype.onResolver = function (rtaskobj, sink) {
+    rtaskobj.task.destroy();
+    if (!sink) {
+      this.findResolver();
+      return;
+    }
+    sink.destroyed.attach(this.findResolver.bind(this));
+    this.resolver = sink;
+    this.state.set('resolver', sink);
+  };
+
+  TcpStandaloneService.prototype.authenticate = execSuite.dependentServiceMethod([], ['resolver'], function (resolver, username, password, defer) {
+    resolver.call('resolve', {username: username, password: password}).then(
+      defer.resolve.bind(defer),
+      defer.reject.bind(defer)
+    );
+  });
 
   TcpStandaloneService.prototype.onSuperSink = function (supersink) {
     this.server = bufferlib.createTcpCallableStandalone(supersink);
@@ -34,6 +71,9 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
   TcpStandaloneService.prototype.propertyHashDescriptor = {
     port: {
       type: 'number'
+    },
+    resolver: {
+      type: 'string'
     }
   };
   

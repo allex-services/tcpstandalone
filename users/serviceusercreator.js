@@ -13,6 +13,13 @@ function createServiceUser(execlib, ParentUser) {
     ParentUser.prototype.__cleanUp.call(this);
   };
 
+  ServiceUser.prototype.c = function (username, password, defer) {
+    this.__service.authenticate(username, password).then(
+      console.log.bind(console,'ok'),
+      console.error.bind(console,'nok')
+    );
+  };
+
   return ServiceUser;
 }
 
