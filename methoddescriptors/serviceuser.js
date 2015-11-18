@@ -1,4 +1,5 @@
 module.exports = {
+  startStandalone: true,
   c: [{
     title: 'Username',
     type: 'string',

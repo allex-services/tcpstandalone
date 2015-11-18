@@ -64,8 +64,10 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
   });
 
   TcpStandaloneService.prototype.onSuperSink = function (supersink) {
-    this.server = bufferlib.createTcpCallableStandalone(supersink);
-    this.server.listen(this.port, console.log.bind(console, 'listening on', this.port));
+    supersink.call('startStandalone').then(
+      console.log.bind(console, 'ok'),
+      console.error.bind(console, 'nok')
+    );
   };
 
   TcpStandaloneService.prototype.propertyHashDescriptor = {
