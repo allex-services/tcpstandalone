@@ -8,5 +8,10 @@ module.exports = {
     title: 'Password',
     type: 'string',
     strongtype: 'String'
+  }],
+  activate: [{
+    title: 'Session ID',
+    type: 'string',
+    strongtype: 'String'
   }]
 };

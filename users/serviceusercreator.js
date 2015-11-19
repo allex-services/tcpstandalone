@@ -35,9 +35,33 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
 
   ServiceUser.prototype.c = function (username, password, defer) {
     this.__service.authenticate(username, password).then(
-      console.log.bind(console,'ok'),
-      console.error.bind(console,'nok')
+      this.reserve.bind(this, defer),
+      defer.reject.bind(defer)
     );
+  };
+
+  ServiceUser.prototype.reserve = function (defer, identity) {
+    var sessid = lib.uid(),
+      d = q.defer();
+    d.promise.done(
+      defer.resolve.bind(defer, sessid),
+      defer.reject.bind(defer)
+    );
+    this.introduceSession(sessid,identity, d);
+  };
+
+  ServiceUser.prototype.activate = function (sessionid, defer) {
+    var d = q.defer();
+    d.promise.then(
+      this.onIdentity.bind(this, defer),
+      defer.reject.bind(defer)
+    );
+    this.dereferenceSession(sessionid, d);
+  };
+
+  ServiceUser.prototype.onIdentity = function (defer, identity) {
+    var ir = this.__service.introduceUser(identity);
+    defer.resolve(true);
   };
 
   return ServiceUser;

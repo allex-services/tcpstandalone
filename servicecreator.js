@@ -57,7 +57,7 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
   };
 
   TcpStandaloneService.prototype.authenticate = execSuite.dependentServiceMethod([], ['resolver'], function (resolver, username, password, defer) {
-    resolver.call('resolve', {username: username, password: password}).then(
+    resolver.call('resolveUser', {username: username, password: password}).then(
       defer.resolve.bind(defer),
       defer.reject.bind(defer)
     );
