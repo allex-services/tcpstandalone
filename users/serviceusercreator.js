@@ -9,10 +9,12 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
 
   function ServiceUser(prophash) {
     ParentUser.call(this, prophash);
+    this.needToSend = null;
   }
   
   ParentUser.inherit(ServiceUser, require('../methoddescriptors/serviceuser'), [/*visible state fields here*/]/*or a ctor for StateStream filter*/);
   ServiceUser.prototype.__cleanUp = function () {
+    this.needToSend = null;
     ParentUser.prototype.__cleanUp.call(this);
   };
 
@@ -33,36 +35,42 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
     }
   }
 
-  ServiceUser.prototype.c = function (username, password, defer) {
+  ServiceUser.prototype.login = function (username, password, defer) {
     this.__service.authenticate(username, password).then(
-      this.reserve.bind(this, defer),
+      this.doLogin.bind(this, defer),
       defer.reject.bind(defer)
     );
   };
 
-  ServiceUser.prototype.reserve = function (defer, identity) {
-    var sessid = lib.uid(),
-      d = q.defer();
-    d.promise.done(
-      defer.resolve.bind(defer, sessid),
-      defer.reject.bind(defer)
-    );
-    this.introduceSession(sessid,identity, d);
+  ServiceUser.prototype.doLogin = function (defer, identity) {
+    var user = this.__service.introduceUser(identity);
+    if(user){
+      if ('function' === typeof user.done) {
+        user.done(
+          this.onUserIntroduced.bind(this, defer)
+        );
+      } else {
+        this.onUserIntroduced(defer, user);
+      }
+    } else {
+      defer.resolve(false);
+    }
   };
 
-  ServiceUser.prototype.activate = function (sessionid, defer) {
-    var d = q.defer();
-    d.promise.then(
-      this.onIdentity.bind(this, defer),
-      defer.reject.bind(defer)
-    );
-    this.dereferenceSession(sessionid, d);
+  ServiceUser.prototype.onUserIntroduced = function (defer, user) {
+    try {
+      console.log('user role', user.role);
+    var session = lib.uid(),
+      usersession = user.createSession(this,session,this);
+    this.sessions.add(usersession.session,usersession);
+    defer.resolve(session);
+    } catch(e) {
+      console.error(e.stack);
+      console.error(e);
+    }
   };
 
-  ServiceUser.prototype.onIdentity = function (defer, identity) {
-    var ir = this.__service.introduceUser(identity);
-    defer.resolve(true);
-  };
+  ServiceUser.prototype.communicationType = 'tcpstandalone';
 
   return ServiceUser;
 }
