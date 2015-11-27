@@ -8,5 +8,15 @@ module.exports = {
     title: 'Password',
     type: 'string',
     strongtype: 'String'
+  }],
+  userInvoke: [{
+    title: 'Session ID',
+    type: 'string'
+  },{
+    title: 'Method name',
+    type: 'string'
+  },{
+    title: 'Invocation parameters',
+    type: 'array'
   }]
 };

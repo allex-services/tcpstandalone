@@ -10,6 +10,7 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
   function ServiceUser(prophash) {
     ParentUser.call(this, prophash);
     this.needToSend = null;
+    this.gate = new lib.Map();
   }
   
   ParentUser.inherit(ServiceUser, require('../methoddescriptors/serviceuser'), [/*visible state fields here*/]/*or a ctor for StateStream filter*/);
@@ -36,6 +37,7 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
   }
 
   ServiceUser.prototype.login = function (username, password, defer) {
+    console.log('authenticate?', username, password);
     this.__service.authenticate(username, password).then(
       this.doLogin.bind(this, defer),
       defer.reject.bind(defer)
@@ -61,13 +63,30 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
     try {
       console.log('user role', user.role);
     var session = lib.uid(),
-      usersession = user.createSession(this,session,this);
-    this.sessions.add(usersession.session,usersession);
+      usersession = user.createSession(this,session,this.gate);
+    this.gate.add(usersession.session,usersession);
     defer.resolve(session);
     } catch(e) {
       console.error(e.stack);
       console.error(e);
     }
+  };
+
+  ServiceUser.prototype.userInvoke = function (sessionid, methodname, paramarry, defer) {
+    var usersession = this.gate.get(sessionid), user;
+    if (!usersession) {
+      defer.reject(new lib.Error('NO_SESSION', sessionid));
+      return;
+    }
+    user = usersession.user;
+    if (!user) {
+      defer.reject(new lib.Error('NO_USER', sessionid));
+      return;
+    }
+    user.exec([methodname, paramarry]).then(
+      defer.resolve.bind(defer),
+      defer.reject.bind(defer)
+    );
   };
 
   ServiceUser.prototype.communicationType = 'tcpstandalone';
