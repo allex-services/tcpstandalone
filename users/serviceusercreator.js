@@ -37,34 +37,37 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
   }
 
   ServiceUser.prototype.login = function (username, password, defer) {
-    console.log('authenticate?', username, password);
+    var connection = arguments[3];
+    console.log('authenticate?', username, password, 'communicationType', connection.communicationType);
     this.__service.authenticate(username, password).then(
-      this.doLogin.bind(this, defer),
+      this.doLogin.bind(this, connection, defer),
       defer.reject.bind(defer)
     );
   };
 
-  ServiceUser.prototype.doLogin = function (defer, identity) {
+  ServiceUser.prototype.doLogin = function (connection, defer, identity) {
+    console.log('introduceUser', identity);
     var user = this.__service.introduceUser(identity);
     if(user){
       if ('function' === typeof user.done) {
         user.done(
-          this.onUserIntroduced.bind(this, defer)
+          this.onUserIntroduced.bind(this, connection, defer)
         );
       } else {
-        this.onUserIntroduced(defer, user);
+        this.onUserIntroduced(connection, defer, user);
       }
     } else {
       defer.resolve(false);
     }
   };
 
-  ServiceUser.prototype.onUserIntroduced = function (defer, user) {
+  ServiceUser.prototype.onUserIntroduced = function (connection, defer, user) {
     try {
       console.log('user role', user.role);
     var session = lib.uid(),
-      usersession = user.createSession(this,session,this.gate);
+      usersession = user.createSession(connection,session,this.gate);
     this.gate.add(usersession.session,usersession);
+    connection.add(usersession);
     defer.resolve(session);
     } catch(e) {
       console.error(e.stack);
@@ -88,8 +91,6 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
       defer.reject.bind(defer)
     );
   };
-
-  ServiceUser.prototype.communicationType = 'tcpstandalone';
 
   return ServiceUser;
 }

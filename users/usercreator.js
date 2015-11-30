@@ -18,9 +18,7 @@ function createUser(execlib, ParentUser) {
     UserSession.prototype.__cleanUp.call(this);
   };
   TcpStandaloneUserSession.prototype.send = function (data) {
-    if (this.server.needToSend) {
-      this.server.needToSend(data);
-    }
+    this.gate.sendData(data);
   };
 
 
