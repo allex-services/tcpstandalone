@@ -2,7 +2,8 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
   'use strict';
   var execSuite = execlib.execSuite,
     taskRegistry = execSuite.taskRegistry,
-    ParentService = ParentServicePack.Service;
+    ParentService = ParentServicePack.Service,
+    RemoteServiceListenerServiceMixin = execSuite.RemoteServiceListenerServiceMixin;
 
   function factoryCreator(parentFactory) {
     return {
@@ -13,14 +14,15 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
 
   function TcpStandaloneService(prophash) {
     ParentService.call(this, prophash);
-    this.resolvername = prophash.resolver;
+    RemoteServiceListenerServiceMixin.call(this);
     this.resolver = null;
     this.port = prophash.port;
     this.server = null;
-    this.findResolver();
+    this.findRemote(prophash.resolver, null, 'resolver');
   }
   
   ParentService.inherit(TcpStandaloneService, factoryCreator);
+  RemoteServiceListenerServiceMixin.inheritMethods(TcpStandaloneService);
   
   TcpStandaloneService.prototype.__cleanUp = function() {
     if (this.server) {
@@ -32,28 +34,8 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
       this.resolver.destroy();
     }
     this.resolver = null;
-    this.resolvername = null;
+    RemoteServiceListenerServiceMixin.prototype.destroy.call(this);
     ParentService.prototype.__cleanUp.call(this);
-  };
-
-  TcpStandaloneService.prototype.findResolver = function () {
-    var rtaskobj = {task: null};
-    rtaskobj.task = taskRegistry.run('findSink', {
-      sinkname: this.resolvername,
-      identity: {name: 'user', role: 'user'},
-      onSink: this.onResolver.bind(this, rtaskobj)
-    });
-  };
-
-  TcpStandaloneService.prototype.onResolver = function (rtaskobj, sink) {
-    rtaskobj.task.destroy();
-    if (!sink) {
-      this.findResolver();
-      return;
-    }
-    sink.destroyed.attach(this.findResolver.bind(this));
-    this.resolver = sink;
-    this.state.set('resolver', sink);
   };
 
   TcpStandaloneService.prototype.authenticate = execSuite.dependentServiceMethod([], ['resolver'], function (resolver, username, password, defer) {
@@ -73,10 +55,10 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
   TcpStandaloneService.prototype.propertyHashDescriptor = {
     port: {
       type: 'number'
-    },
+    }/*,
     resolver: {
-      type: 'string'
-    }
+      type: 'string|object'
+    }*/
   };
   
   return TcpStandaloneService;
