@@ -22,7 +22,7 @@ function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
   }
   
   ParentService.inherit(TcpStandaloneService, factoryCreator);
-  RemoteServiceListenerServiceMixin.inheritMethods(TcpStandaloneService);
+  RemoteServiceListenerServiceMixin.addMethods(TcpStandaloneService);
   
   TcpStandaloneService.prototype.__cleanUp = function() {
     if (this.server) {
