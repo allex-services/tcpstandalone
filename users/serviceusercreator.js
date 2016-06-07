@@ -65,10 +65,11 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
     try {
       console.log('user role', user.role);
     var session = lib.uid(),
-      usersession = user.createSession(connection,session,this.gate);
+      usersession;
+    defer.resolve(session);
+    usersession = user.createSession(connection,session,this.gate);
     this.gate.add(usersession.session,usersession);
     connection.add(usersession);
-    defer.resolve(session);
     } catch(e) {
       console.error(e.stack);
       console.error(e);
