@@ -9,7 +9,6 @@ function createServicePack(execlib) {
       dependencies: ['.']
     }
   };
-
 }
 
 module.exports = createServicePack;
