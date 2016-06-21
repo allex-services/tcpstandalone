@@ -1,8 +1,7 @@
-function createTcpStandaloneService(execlib, ParentServicePack, bufferlib) {
+function createTcpStandaloneService(execlib, ParentService, bufferlib) {
   'use strict';
   var execSuite = execlib.execSuite,
     taskRegistry = execSuite.taskRegistry,
-    ParentService = ParentServicePack.Service,
     RemoteServiceListenerServiceMixin = execSuite.RemoteServiceListenerServiceMixin;
 
   function factoryCreator(parentFactory) {
