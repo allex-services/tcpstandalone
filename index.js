@@ -3,7 +3,7 @@ function createServicePack(execlib) {
 
   return {
     service: {
-      dependencies: ['.', 'allex:buffer:lib']
+      dependencies: ['.', 'allex_bufferlib']
     },
     sinkmap: {
       dependencies: ['.']
