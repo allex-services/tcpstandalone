@@ -77,8 +77,7 @@ function createServiceUser(execlib, ParentUser, bufferlib) {
     lib.qlib.thenAny(
       user.createSession(this.gate,session,connection),
       onUserCreatedForIntroduction.bind(this, connection, session, defer),
-      console.error.bind(console, 'oopsie')
-      //defer.reject.bind(defer)
+      defer.reject.bind(defer)
     );
     connection = null;
     session = null;
